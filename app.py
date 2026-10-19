@@ -1,32 +1,22 @@
-from flask import Flask, jsonify
-from routes import api_bp
+import importlib
+import pkgutil
+
+from flask import Flask
+
+import routes
 
 
-def create_app(config=None):
-    """Application factory for MediQuick Pharmacy."""
+def create_app():
     app = Flask(__name__)
+    # auto-register every blueprint found in the routes/ folder
+    for module_info in pkgutil.iter_modules(routes.__path__):
+        module = importlib.import_module(f"routes.{module_info.name}")
+        if hasattr(module, "bp"):
+            app.register_blueprint(module.bp)
 
-    if config:
-        app.config.update(config)
-
-    app.register_blueprint(api_bp)
-
-    @app.route("/")
-    def index():
-        return jsonify({
-            "service": "MediQuick Pharmacy API",
-            "version": "1.0.0",
-            "status": "online",
-            "endpoints": {
-                "health": "/health",
-                "medicines": "/api/medicines",
-                "orders": "/api/orders"
-            }
-        }), 200
-
-    @app.route("/health")
+    @app.get("/")
     def health():
-        return jsonify({"status": "healthy"}), 200
+        return {"project": "MediQuick", "status": "running"}
 
     return app
 
@@ -34,4 +24,4 @@ def create_app(config=None):
 app = create_app()
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(debug=True)
