@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, request, jsonify
 
 bp = Blueprint("medicines", __name__)
 MEDICINES = [
@@ -10,4 +10,6 @@ MEDICINES = [
 
 @bp.get("/medicines")
 def list_medicines():
-    return jsonify(MEDICINES)
+    q = request.args.get("q", "").strip().lower()
+    results = [m for m in MEDICINES if q in m["name"].lower()]
+    return jsonify(results)
